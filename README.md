@@ -130,6 +130,133 @@ Key differences from Python examples:
 - Uses Promises and callbacks for asynchronous operations
 - Handles connection closure explicitly
 
+## Node.js Backend with RabbitMQ Integration
+
+This section demonstrates a complete Node.js backend integration with RabbitMQ, featuring a publisher-consumer architecture with REST API endpoints.
+
+### Project Structure
+
+```
+src/
+├── utils/
+│   └── rabbitmq.js      # RabbitMQ connection utility
+├── services/
+│   ├── publisher.js     # Message publishing service
+│   └── consumer.js      # Message consuming service
+├── server.js            # Express server with REST APIs
+└── consumer.js          # Standalone consumer script
+```
+
+### Components
+
+1. **RabbitMQ Connection Utility** (`src/utils/rabbitmq.js`):
+   - Manages RabbitMQ connection
+   - Handles queue creation
+   - Provides connection pooling
+
+2. **Publisher Service** (`src/services/publisher.js`):
+   - Handles message publishing
+   - Supports single and batch message publishing
+   - Ensures message persistence
+
+3. **Consumer Service** (`src/services/consumer.js`):
+   - Manages message consumption
+   - Implements message acknowledgment
+   - Handles error cases with message requeueing
+
+4. **Express Server** (`src/server.js`):
+   - Exposes REST APIs for publishing messages
+   - Endpoints:
+     - `POST /api/tasks`: Publish single task
+     - `POST /api/tasks/batch`: Publish multiple tasks
+     - `GET /health`: Health check
+
+5. **Consumer Script** (`src/consumer.js`):
+   - Standalone consumer process
+   - Processes messages one at a time
+   - Can be run separately from the main server
+
+### Running the Application
+
+1. Start the server:
+```bash
+npm start
+```
+
+2. Start the consumer (in a separate terminal):
+```bash
+npm run consumer
+```
+
+3. Test the API endpoints:
+
+```bash
+# Publish a single task
+curl -X POST http://localhost:3000/api/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"task": "example task", "priority": "high"}'
+
+# Publish multiple tasks
+curl -X POST http://localhost:3000/api/tasks/batch \
+  -H "Content-Type: application/json" \
+  -d '[{"task": "task1"}, {"task": "task2"}]'
+
+# Check server health
+curl http://localhost:3000/health
+```
+
+### Features
+
+- Error handling with proper error responses
+- Message persistence for reliability
+- Scalable consumer architecture
+- Health check endpoints
+- CORS support for web applications
+- Message acknowledgments for reliable processing
+- Batch processing support
+- Connection pooling and management
+
+### API Documentation
+
+#### POST /api/tasks
+Publishes a single task to the queue.
+
+Request body:
+```json
+{
+  "task": "example task",
+  "priority": "high"
+}
+```
+
+#### POST /api/tasks/batch
+Publishes multiple tasks to the queue.
+
+Request body:
+```json
+[
+  {"task": "task1", "priority": "high"},
+  {"task": "task2", "priority": "low"}
+]
+```
+
+#### GET /health
+Returns server health status.
+
+Response:
+```json
+{
+  "status": "OK"
+}
+```
+
+### Error Handling
+
+- The server provides appropriate HTTP status codes
+- Failed messages are requeued automatically
+- Connection errors are handled gracefully
+- Consumer errors don't crash the application
+
 ## Useful Docker Commands
 
 - Check container status:
