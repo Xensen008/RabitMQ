@@ -378,6 +378,166 @@ Response:
 - Connection errors are handled gracefully
 - Consumer errors don't crash the application
 
+## REST API for Message Publishing
+
+The application exposes several REST endpoints for publishing messages and monitoring queues.
+
+### Endpoints
+
+#### 1. Publish Single Message
+```http
+POST /api/messages/publish/:queue
+```
+
+Publishes a single message to the specified queue.
+
+**Parameters:**
+- `queue` (path parameter): Name of the target queue
+
+**Request Body:**
+```json
+{
+    "content": "Your message content",
+    "priority": "high",
+    "timestamp": "2023-12-20T10:00:00Z"
+}
+```
+
+**Response:**
+```json
+{
+    "success": true,
+    "message": "Message published successfully",
+    "queue": "my_queue",
+    "data": {
+        "content": "Your message content",
+        "priority": "high",
+        "timestamp": "2023-12-20T10:00:00Z"
+    }
+}
+```
+
+#### 2. Publish Batch Messages
+```http
+POST /api/messages/publish/:queue/batch
+```
+
+Publishes multiple messages to the specified queue.
+
+**Parameters:**
+- `queue` (path parameter): Name of the target queue
+
+**Request Body:**
+```json
+[
+    {
+        "content": "Message 1",
+        "priority": "high"
+    },
+    {
+        "content": "Message 2",
+        "priority": "low"
+    }
+]
+```
+
+**Response:**
+```json
+{
+    "success": true,
+    "message": "Batch messages published successfully",
+    "queue": "my_queue",
+    "count": 2
+}
+```
+
+#### 3. Get Queue Status
+```http
+GET /api/messages/status/:queue
+```
+
+Retrieves the current status of a specified queue.
+
+**Parameters:**
+- `queue` (path parameter): Name of the queue to check
+
+**Response:**
+```json
+{
+    "success": true,
+    "queue": "my_queue",
+    "status": {
+        "messageCount": 10,
+        "consumerCount": 2,
+        "queue": "my_queue"
+    }
+}
+```
+
+### Error Responses
+
+All endpoints return error responses in the following format:
+
+```json
+{
+    "success": false,
+    "error": "Error message",
+    "details": "Detailed error information"
+}
+```
+
+Common HTTP status codes:
+- `200`: Success
+- `400`: Bad Request (invalid input)
+- `500`: Internal Server Error
+
+### Testing with cURL
+
+1. Publish a single message:
+```bash
+curl -X POST http://localhost:3000/api/messages/publish/my_queue \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Test message", "priority": "high"}'
+```
+
+2. Publish batch messages:
+```bash
+curl -X POST http://localhost:3000/api/messages/publish/my_queue/batch \
+  -H "Content-Type: application/json" \
+  -d '[{"content": "Message 1"}, {"content": "Message 2"}]'
+```
+
+3. Check queue status:
+```bash
+curl http://localhost:3000/api/messages/status/my_queue
+```
+
+### Features
+
+- Dynamic queue creation
+- Message persistence
+- Batch message support
+- Queue monitoring
+- Error handling
+- CORS support
+
+### Best Practices
+
+1. **Message Format**:
+   - Include timestamp in messages
+   - Use consistent message structure
+   - Add message priority when needed
+
+2. **Error Handling**:
+   - Always check response status
+   - Implement retry logic for failed requests
+   - Log errors with appropriate context
+
+3. **Performance**:
+   - Use batch endpoints for multiple messages
+   - Monitor queue size regularly
+   - Implement rate limiting if needed
+
 ## Useful Docker Commands
 
 - Check container status:
