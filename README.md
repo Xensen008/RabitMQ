@@ -130,6 +130,127 @@ Key differences from Python examples:
 - Uses Promises and callbacks for asynchronous operations
 - Handles connection closure explicitly
 
+## Basic Publisher and Consumer Examples
+
+This section demonstrates the basic implementation of publishing and consuming messages with RabbitMQ.
+
+### Basic Publisher Implementation
+
+```javascript
+const amqp = require('amqplib');
+
+const publishMessage = async (queue, message) => {
+    try {
+        // Connect to RabbitMQ
+        const connection = await amqp.connect('amqp://localhost');
+        const channel = await connection.createChannel();
+
+        // Assert queue exists
+        await channel.assertQueue(queue, { durable: true });
+
+        // Send message
+        channel.sendToQueue(queue, Buffer.from(message));
+        console.log(`Message sent: ${message}`);
+
+        // Close connections
+        await channel.close();
+        await connection.close();
+    } catch (error) {
+        console.error('Error publishing message:', error);
+    }
+};
+```
+
+Key components of the publisher:
+- Establishes connection to RabbitMQ
+- Creates a channel for communication
+- Ensures queue exists with `assertQueue`
+- Sends message using `sendToQueue`
+- Properly closes connections
+
+### Basic Consumer Implementation
+
+```javascript
+const amqp = require('amqplib');
+
+const consumeMessage = async (queue) => {
+    try {
+        // Connect to RabbitMQ
+        const connection = await amqp.connect('amqp://localhost');
+        const channel = await connection.createChannel();
+
+        // Assert queue exists
+        await channel.assertQueue(queue, { durable: true });
+
+        console.log(`Waiting for messages in queue: ${queue}`);
+
+        // Consume messages
+        channel.consume(queue, (msg) => {
+            if (msg !== null) {
+                console.log(`Received: ${msg.content.toString()}`);
+                channel.ack(msg);
+            }
+        });
+    } catch (error) {
+        console.error('Error consuming message:', error);
+    }
+};
+```
+
+Key components of the consumer:
+- Establishes connection to RabbitMQ
+- Creates a channel for communication
+- Ensures queue exists
+- Sets up message consumption with callback
+- Acknowledges messages after processing
+
+### Running the Basic Examples
+
+1. Start the consumer in one terminal:
+```bash
+node examples/basic/consumer.js
+```
+
+2. Run the publisher in another terminal:
+```bash
+node examples/basic/publisher.js
+```
+
+### Important Concepts
+
+1. **Message Durability**:
+   - Queue is created with `{ durable: true }` to survive broker restarts
+   - Messages persist even if RabbitMQ server restarts
+
+2. **Message Acknowledgment**:
+   - Consumer explicitly acknowledges messages using `channel.ack(msg)`
+   - Ensures messages aren't lost if consumer crashes
+
+3. **Connection Management**:
+   - Publisher closes connections after sending
+   - Consumer keeps connection open for continuous consumption
+
+4. **Error Handling**:
+   - Both publisher and consumer implement try-catch blocks
+   - Errors are properly logged for debugging
+
+### Best Practices
+
+1. **Connection Handling**:
+   - Publishers should create and close connections for each batch
+   - Consumers should maintain long-lived connections
+   - Implement connection retry mechanisms
+
+2. **Message Processing**:
+   - Always acknowledge or reject messages
+   - Implement dead-letter queues for failed messages
+   - Consider message TTL for expired messages
+
+3. **Queue Management**:
+   - Use descriptive queue names
+   - Consider queue limits to prevent memory issues
+   - Implement queue monitoring
+
 ## Node.js Backend with RabbitMQ Integration
 
 This section demonstrates a complete Node.js backend integration with RabbitMQ, featuring a publisher-consumer architecture with REST API endpoints.
